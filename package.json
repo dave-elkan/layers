@@ -1,0 +1,16 @@
+{
+  "name": "layers",
+  "description": "A layered architecture for Express",
+  "version": "0.0.1",
+  "repository": {
+    "url": ""
+  },
+  "author": "Dave Elkan <dave@edave.net> (http://www.edave.net)",
+  "directories": {
+    "lib": "lib"
+  },
+  "main": "index",
+  "engines": {
+    "node": "*"
+  }
+}
