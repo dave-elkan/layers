@@ -1,7 +1,4 @@
-TestController = function() {};
-
-TestController.prototype = {
-    
+module.exports = [{
     getIndex: function(req, res, callback) {
         callback(null, [{
             _id: "test",
@@ -10,11 +7,5 @@ TestController.prototype = {
                 _id: "test",
                 name: "Test"
         }]);
-    },
-
-    getItemByKey: function(req, res, callback) {
-        callback()
     }
-};
-
-module.exports = TestController;
+}];
