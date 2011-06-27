@@ -7,8 +7,10 @@ If you prefer a real-world implementation rather than abstract documentation
 please see [Layered Express](https://github.com/dave-elkan/layered-express).
 
 Node Layers does not strictly prescribe which layers it supports. Instead it
-facilitates the loading of the files which make up your web app, instantiating
-them and adding them as properties of your app/server object.
+facilitates the loading of the files which make up your web app, instantiating 
+them (if they're prototypal objects), running them (if they're functions) 
+or simply loading them if they're plain old javascript objects and adding them 
+as properties of your app/server object.
 
 The app is then passed to the wiring function (see below) which wires up the 
 layers of your application.
@@ -20,7 +22,7 @@ designed to be extended to work with any framework. Feel free to submit a patch.
 
 To install Node Layers:
 
-    $ npm install node-layers
+    $ npm install layers
 
 ## Usage
 

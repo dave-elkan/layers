@@ -224,4 +224,3 @@ exports["Test dodgy wiring - wiring is invalid (an array)"] = function () {
         },
         layeredApp = new Layers(mockServer, layersDir, wiring);
 };
-
