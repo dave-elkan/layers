@@ -1,16 +1,15 @@
 # Node Layers
 
-Node Layers is a helper module for [nodejs](http://nodejs.org) web apps.
-It will automatically load and loosely couple the layers of your web app.
+Node Layers is a helper module for [nodejs](http://nodejs.org) web apps. It will
+automatically load and loosely couple the layers of your web app.
 
 If you prefer a real-world implementation rather than abstract documentation
 please see [Layered Express](https://github.com/dave-elkan/layered-express).
 
 Node Layers does not strictly prescribe which layers it supports. Instead it
-facilitates the loading of the files which make up your web app, instantiating 
-them (if they're prototypal objects), running them (if they're functions) 
-or simply loading them if they're plain old javascript objects and adding them 
-as properties of your app/server object.
+facilitates the loading of the files which make up your web app running them 
+(if they're functions) or simply loading them if they're plain old javascript
+objects and adding them as properties of your app/server object.
 
 The app is then passed to the wiring function (see below) which wires up the 
 layers of your application.
@@ -36,44 +35,23 @@ i.e. for Express:
 		wiring = require('./layers/wiring');
     new Layers(app, __dirname + '/layers', wiring);
 
-The default layers loaded are controllers and views.
-There must be a directory for each of these layers in your layers directory.
-i.e. In the above example the controllers will be found at:
+## Loading Layers
 
-	/path/to/app/layers/controllers
-	/path/to/app/layers/views
+Each directory nested immediately within the layers directory defines a layer.
 
-Different or additional layers can be loaded by overriding the default options
-of the Layers module.
+Each of these layer directories are recursively scanned for javascript files which are imported using require. The result of the require is inspected for two possibilities: 
 
-i.e. To load a directory of code which will serve as the service layer.
+* An object
+* A function which returns an object.
 
-	var Layers = require('layers').Express,
-		wiring = require('./layers/wiring');
-    new Layers(app, __dirname + '/layers', wiring, {
-        layers: [
-            "controllers",
-            "services",
-            "views"
-        ]
-    });
-	
-This will load and instantiate all of the files (with one exception) in the 
-following directories:
+The object loaded or returned from the function is appended to the app object under the layer's namespace.
+ 
+e.g.
+ 
+/path/to/app/layers/controllers/BookController.js becomes app.controllers.bookController
+/path/to/app/layers/services/AuthorService.js becomes app.services.authorService
 
-	/path/to/app/layers/controllers
-	/path/to/app/layers/services
-	/path/to/app/layers/views
-
-## Loading and Instantiation
-
-Each layer directory is recursively searched for files with .js suffix which are 
-then loaded using `require`, instantiated and appended to the app object under
-the namespace they belong. 
-
-i.e. `BookController` is instantiated as a singleton to `app[controllers].bookController`
-
-One exception is made: any file beggining with "Base" is ignored.
+One exception is made when loading the layer files: Any file whose name begins with "Base" is ignored.
 This name can be overriden by specifying the `excludePrefix` option.
 
 i.e. 
@@ -84,21 +62,17 @@ i.e.
 
 ## Wiring
 
-The wiring argument is a reference to a function which will return the
-wiring of your webapp, their actions and views.
-
-The function's only parameter is the server/app object. When the wiring
-function is called the app has already been populated with your layers.
-
-The wiring is defined as a map of arrays of route objects.
+To wire the layers together you need to create a 'wiring' function. 
+This function takes the layer populated app object as it's only parameter 
+and returns a hash of arrays indexed by the route they service.
 
 i.e.
+
 	`module.exports = function(app) {
 		var controllers = app.controllers,
 			views = app.views;
 		return {
    			"/": [{
-   					method: "get",
    					action: controllers.homeController.homeGetAction,
    					views: {
 						html: views.homeView,
@@ -121,23 +95,32 @@ i.e.
 					}
    				}
    			]
-		}`
+		}
+	}`
 
-## Controllers
+The format of the wiring object is important. Each route supports many 
+handlers which all have to define Action and View properties.
 
-Controllers are simple functions which accept a request, response and callback
-parameters. The Controller is responsible for attempting to do some work (it's not
-concerned what) and calling the callback with either the result of that work or a 
-subsequent error.
+The method property is optional and defaults to 'get'.
 
-The functions are called with the context of the app/server object. Thus all other
-layers are easily referenced.
+## Actions
+
+A handler's action property is simply a reference to a function which accepts a 
+request and response objects as well as a callback and next function. They are 
+called in the context of the app object which allows for easy access to all of the other layers.
+
+Action functions generally belong to the Controller layer. They are responsible for pulling 
+variables from the request, their validation and sending them to the Service layer. 
+The following contrived example does not allow any '1s' in the Author's key.
+
+You will also notice that this controller simply delegates to the service layer, but at the same time it shields it from the request and response objects.
+
+The callback variable which is owned and created by Layers is passed straight through to the service layer. 
+It accepts the result of the service or an Error.
 
 i.e.
 
-	AuthorController = function() {};
-
-	AuthorController.prototype = {
+	module.exports = {
     
 	    displayAuthorList: function(req, res, callback) {
 	        this.services.authorService.getList(callback);
@@ -153,19 +136,19 @@ i.e.
 	    }
 	};
 
-	module.exports = AuthorController;
-
 ## Views
 
-Views wrap template files and offer testable formatting for your view output.
+Views are wrappers around your favourite templating system. They accept the request and response objects and the result of the handler's action.
+
+BaseExpressView can be used as a basis for your own Express (jade) Views. You only need to specify the "getTemplate" function.
 
 ## Error View
 
-Node Layers supplies an ErrorView function which will be used to display errors.
+Node Layers supplies an ErrorView function which is be used by default to display errors.
 It is advisable that you define your own ErrorView function so you can better 
 display errors as you see fit when they occur.
 
-## License 
+## License
 
 (The MIT License)
 
