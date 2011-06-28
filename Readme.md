@@ -1,12 +1,12 @@
-# Node Layers
+# Layers
 
-Node Layers is a helper module for [nodejs](http://nodejs.org) web apps. It will
+Layers is a helper module for [nodejs](http://nodejs.org) web apps. It will
 automatically load and loosely couple the layers of your web app.
 
 If you prefer a real-world implementation rather than abstract documentation
 please see [Layered Express](https://github.com/dave-elkan/layered-express).
 
-Node Layers does not strictly prescribe which layers it supports. Instead it
+Layers does not strictly prescribe which layers it supports. Instead it
 facilitates the loading of the files which make up your web app running them 
 (if they're functions) or simply loading them if they're plain old javascript
 objects and adding them as properties of your app/server object.
@@ -14,12 +14,12 @@ objects and adding them as properties of your app/server object.
 The app is then passed to the wiring function (see below) which wires up the 
 layers of your application.
 
-Currently the only supported framework is Express, however Node Layers has been
+Currently the only supported framework is Express, however Layers has been
 designed to be extended to work with any framework. Feel free to submit a patch.
 
 ## Installation
 
-To install Node Layers:
+To install Layers:
 
     $ npm install layers
 
@@ -144,7 +144,7 @@ BaseExpressView can be used as a basis for your own Express (jade) Views. You on
 
 ## Error View
 
-Node Layers supplies an ErrorView function which is be used by default to display errors.
+Layers supplies an ErrorView function which is be used by default to display errors.
 It is advisable that you define your own ErrorView function so you can better 
 display errors as you see fit when they occur.
 
