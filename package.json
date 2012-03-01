@@ -1,7 +1,7 @@
 {
     "name": "layers",
-    "description": "A package to help layered architecture for node.js",
-    "version": "1.0.0",
+    "description": "A package to help layered architecture.",
+    "version": "0.0.3",
     "repository": "git://github.com/dave-elkan/layers",
     "author": "Dave Elkan <dave@edave.net> (http://www.edave.net)",
     "dependencies": {
