@@ -62,6 +62,19 @@ i.e.
 		excludePrefix: "Abstract"
 	});
 
+## Layer Callbacks
+
+If would like to run a callback after a layer has been processed, you may do it like so:
+
+    layers(app, {
+		rootPath: __dirname + '/layers',
+		callbacks: {
+			layername: function(){
+				doThis();
+			}
+		}
+	});
+
 ## License
 
 (The MIT License)
