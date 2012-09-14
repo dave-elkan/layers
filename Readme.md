@@ -68,7 +68,7 @@ If would like to run a callback after a layer has been processed, you may do it 
 
     layers(app, {
 		rootPath: __dirname + '/layers',
-		callback: {
+		callbacks: {
 			layername: function(){
 				doThis();
 			}
