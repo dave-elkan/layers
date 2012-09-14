@@ -18,3 +18,22 @@ test("Ensure loader loads layers", function(t) {
     t.equal(server.services.testService.testServiceFunction(), "A Test value", "Test service function is present and returns correct value");
     t.end();
 });
+
+test("test layer callback", function(t) {
+    var layers = require('../layers'),
+        server = {};
+
+    var called = false;
+
+    layers(server, {
+        rootPath: __dirname + "/../testLayers",
+        callbacks: {
+            controllers: function(){
+                called = true;
+            }
+        }
+    });
+
+    t.ok(called, "Callback was hit");
+    t.end();
+});

@@ -16,7 +16,8 @@ module.exports = function(server, options) {
     _.defaults(options, defaults);
 
     var layers = options.layers || getLayers(options.rootPath),
-        excludePrefix = options.excludePrefix;
+        excludePrefix = options.excludePrefix,
+        callbacks = options.callbacks || {};
 
     layers.forEach(function(layer) {
         server[layer] = loadComponents(options.rootPath + "/" + layer, layer);
@@ -80,6 +81,10 @@ module.exports = function(server, options) {
                 }
             }
         });
+
+        if(callbacks[layer]){
+            callbacks[layer]();
+        }
 
         return components;
     }
