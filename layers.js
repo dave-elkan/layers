@@ -46,6 +46,8 @@ module.exports = function(server, options) {
             }
         });
 
+	directories.sort();
+
         // Ensure handlers are always loaded last.
         if (hasControllers) {
             directories.push("controllers");
