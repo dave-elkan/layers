@@ -36,7 +36,7 @@ i.e. for Express:
 		rootPath: __dirname + '/layers'
 	});
 
-## Loading Layers
+## Loading Layers by directories
 
 Each directory nested immediately within the layers directory defines a layer.
 
