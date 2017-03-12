@@ -1,56 +1,68 @@
-var fs = require('fs'),
-    _ = require('underscore'),
+/* eslint no-use-before-define: 0 */
+const fs = require('fs'),
     defaults = {
-        excludePrefix: "Base",
-        rootPath: "./layers/"
+        excludePrefix: 'Base',
+        rootPath: './layers/',
+        contextName: 'IoC'
     };
 
 /**
- * Loads the 'layers' of an application by loading their constituant
- * files, instanciating them and adding them to the server object.
+ * Loads the 'layers' of an application by loading their constituent
+ * files, instantiating them and adding them to the server object.
  *
  * @param server The server object (i.e. Express app).
  * @param options An optional options object.
  */
-module.exports = function(server, options) {
-    _.defaults(options, defaults);
+module.exports = function (server, options) {
+    options = Object.assign({}, defaults, options);
 
-    var layers = options.layers || getLayers(options.rootPath),
+    const layers = options.layers || getLayers(options.rootPath),
         excludePrefix = options.excludePrefix,
-        callbacks = options.callbacks || {};
+        loadRecursivelyPerLayerName = options.loadRecursivelyPerLayerName,
+        callbacks = options.callbacks || {},
+        requirePath = options.requirePath,
+        contextName = options.contextName;
 
-    layers.forEach(function(layer) {
-        server[layer] = loadComponents(options.rootPath + "/" + layer, layer);
+    console.log('Wiring layers started');
+    server[contextName] = server[contextName] || {};
+    let searchPath = options.rootPath;
+    layers.forEach(function (layer) {
+        if (!loadRecursivelyPerLayerName) {
+            searchPath = options.rootPath + '/' + layer + '/';
+        }
+        server[contextName][getInstanceName(layer)] = loadComponents(searchPath, requirePath || searchPath, layer);
     });
+    console.log('Wiring layers done');
+    console.log('');
 
     /**
      * Returns a list of layer names.
-     * 
+     *
      * Finds the directories in the root path supplied
      * and returns their names as the layers this application
      * makes use of.
      */
     function getLayers(rootPath) {
-        var layers = getDirectoryFileListSync(rootPath),
-            directories = [],
-            hasControllers = false;
+        const dirs = getDirectoryFileListSync(rootPath),
+            directories = [];
+        let hasControllers = false;
 
-        layers.forEach(function(layer) {
-            if (layer === "controllers") {
+        dirs.forEach(function (layer) {
+            if (layer === 'controllers') {
                 hasControllers = true;
             } else {
-                var fullPathToLayerDirectory = rootPath + "/" + layer;
+                const fullPathToLayerDirectory = rootPath + '/' + layer;
                 if (isDirectory(fullPathToLayerDirectory)) {
                     directories.push(layer.toLowerCase());
                 }
             }
         });
 
-	directories.sort();
+        directories.sort();
 
         // Ensure handlers are always loaded last.
         if (hasControllers) {
-            directories.push("controllers");
+            directories.push('controllers');
         }
 
         return directories;
@@ -61,67 +73,81 @@ module.exports = function(server, options) {
      * adding references to them under the current layer namespace on the
      * supplied server object.
      */
-    function loadComponents(path, layer) {
-        var files = getDirectoryFileListSync(path),
-            components = {};
+    function loadComponents(path, rPath, layer, components) {
+        const files = getDirectoryFileListSync(path);
+        components = components || {};
 
-        files.forEach(function(fileName) {
-            var fullPathToFile = path + "/" + fileName;
+        files.forEach(function (fileName) {
+            const fullPathToFile = path + '/' + fileName;
             if (isDirectory(fullPathToFile)) {
-                loadComponents(fullPathToFile, layer);
-            } else if (fileName.indexOf(excludePrefix) != 0 && fileName.indexOf(".js") === fileName.length - 3) {
-                var name = getRequireName(fileName),
-                    item = require(path + "/" + name);
-
-                if (typeof item === "function") {
-                    item = item(server); 
-                }
-                
-                if (item) {
-                    console.log("Attaching", layer + "." + getInstanceName(name));
-                    components[getInstanceName(name)] = item;
-                }
+                loadComponents(fullPathToFile, rPath + '/' + fileName, layer, components);
+            } else if (loadRecursivelyPerLayerName &&
+                fileName.indexOf(excludePrefix) !== 0 &&
+                fileName.indexOf('.js') === fileName.length - 3 &&
+                fileName.indexOf(layer) !== -1) {
+                attachComponent(fileName, rPath, layer, components);
+            } else if (!loadRecursivelyPerLayerName &&
+                fileName.indexOf(excludePrefix) !== 0 &&
+                fileName.indexOf('.js') === fileName.length - 3) {
+                attachComponent(fileName, rPath, layer, components);
             }
         });
 
-        if(callbacks[layer]){
+        if (callbacks[layer]) {
             callbacks[layer]();
         }
 
         return components;
     }
 
+    function attachComponent(fileName, path, layer, components) {
+        const name = getRequireName(fileName);
+        let item = require(path + '/' + name);
+
+        if (isFunction(item)) {
+            item = item(server);
+        }
+
+        if (item) {
+            console.log('Attaching', getInstanceName(layer) + '.' + getInstanceName(name));
+            components[getInstanceName(name)] = item;
+        }
+    }
+
+    function isFunction(functionToCheck) {
+        const getType = {};
+        return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
+    }
+
     /**
      * Synchronously returns a file list from a directory.
      */
     function getDirectoryFileListSync(directory) {
-        var files = [];
         if (dirExistsSync(directory) && isDirectory(directory)) {
-            files = fs.readdirSync(directory);
+            return fs.readdirSync(directory);
         }
-
-        return files;
+        return [];
     }
 
     /**
      * Synchronously checks to see whether a directory exists or not.
      */
-    function dirExistsSync (directory) { 
+    function dirExistsSync(directory) {
         try {
             fs.statSync(directory);
             return true;
         } catch (err) {
             return false;
-        } 
+        }
     }
 
     /**
-     * Synchronously checks whether the file at the path specified is a 
+     * Synchronously checks whether the file at the path specified is a
      * directory or not.
      */
     function isDirectory(file) {
         try {
-            var stats = fs.statSync(file);
+            const stats = fs.statSync(file);
             return stats.isDirectory();
         } catch (err) {
             return false;
@@ -132,7 +158,7 @@ module.exports = function(server, options) {
      * Synchronously returns the name of the file sans .js suffix.
      */
     function getRequireName(file) {
-        return file.substr(0, file.lastIndexOf(".js"));
+        return file.substr(0, file.lastIndexOf('.js'));
     }
 
     /**
@@ -144,4 +170,3 @@ module.exports = function(server, options) {
         return name[0].toLowerCase() + name.substr(1);
     }
 };
-

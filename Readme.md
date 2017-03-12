@@ -33,10 +33,10 @@ i.e. for Express:
 
     var layers = require('layers');
     layers(app, {
-		rootPath: __dirname + '/layers'
-	});
+        rootPath: __dirname + '/layers'
+    });
 
-## Loading Layers
+## Loading Layers by directories
 
 Each directory nested immediately within the layers directory defines a layer.
 
@@ -49,8 +49,8 @@ The object loaded or returned from the function is appended to the app object un
  
 e.g.
  
-/path/to/app/layers/controllers/BookController.js becomes app.controllers.bookController
-/path/to/app/layers/services/AuthorService.js becomes app.services.authorService
+/path/to/app/layers/controllers/BookController.js becomes app.IoC.controllers.bookController
+/path/to/app/layers/services/AuthorService.js becomes app.IoC.services.authorService
 
 One exception is made when loading the layer files: Any file whose name begins with "Base" is ignored.
 This name can be overriden by specifying the `excludePrefix` option.
@@ -58,22 +58,43 @@ This name can be overriden by specifying the `excludePrefix` option.
 i.e. 
 
     layers(app, {
-		rootPath: __dirname + '/layers',
-		excludePrefix: "Abstract"
-	});
+        rootPath: __dirname + '/layers',
+        excludePrefix: "Abstract"
+    });
+
+
+## Loading Layers by file names
+
+If would like to group your packages by functionality, you can load your layers by file names and you may do it like so:
+
+    layers(app, {
+        rootPath: __dirname + '/layers',
+        loadRecursivelyPerLayerName: true,
+        layers: ['Service', 'Controller'],
+        contextName: 'IOCupdated'
+    });
+
+e.g.
+ 
+/path/to/app/layers/book/BookController.js becomes app.IOCupdated.controller.bookController
+/path/to/app/layers/book/BookService.js becomes app.IOCupdated.service.bookService
+/path/to/app/layers/author/AuthorController.js becomes app.IOCupdated.controller.authorController
+/path/to/app/layers/author/AuthorService.js becomes app.IOCupdated.service.authorService
+
+Please notice that the context name is configurable
 
 ## Layer Callbacks
 
 If would like to run a callback after a layer has been processed, you may do it like so:
 
     layers(app, {
-		rootPath: __dirname + '/layers',
-		callbacks: {
-			layername: function(){
-				doThis();
-			}
-		}
-	});
+        rootPath: __dirname + '/layers',
+        callbacks: {
+            layername: function(){
+                doThis();
+            }
+        }
+    });
 
 ## License
 
